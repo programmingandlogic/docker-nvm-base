@@ -1,11 +1,12 @@
 # DOCKER-VERSION ~1.1.0
-FROM ubuntu
+FROM ubuntu:wily
 
 # setup base system
 COPY apt.sources.list /etc/apt/sources.list
 RUN apt-get update
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy build-essential libssl-dev git man curl
 
+# def
 USER root
 ENV HOME /root
 ENV NODE_VER v0.10
