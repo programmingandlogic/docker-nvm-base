@@ -9,15 +9,23 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get install -qy build-essential libssl-de
 # def
 USER root
 ENV HOME /root
-ENV NODE_VER v0.10
+ENV NODE_VER v5.6
 
-# setup the nvm environment
-RUN git clone https://github.com/creationix/nvm.git $HOME/.nvm
-RUN echo '\n#The Following loads nvm, and install Node.js which version is assigned to $NODE_ENV' >> $HOME/.profile
+# setup the cli env
+RUN git clone --depth=1 https://github.com/creationix/nvm.git $HOME/.nvm
+RUN git clone --depth=1 https://github.com/programmingandlogic/ci $HOME/ci
+
+# npm install
+WORKDIR /root/ci
+
+# Install node version into the image as well as run npm install.
+RUN /bin/bash -c '. ~/.nvm/nvm.sh; nvm install ${NODE_VER};\
+nvm use ${NODE_VER}; nvm alias default ${NODE_VER};\
+echo "Running npm install in $(pwd)";\
+npm install;'
+
+# modify .profile
 RUN echo '. ~/.nvm/nvm.sh' >> $HOME/.profile
-RUN echo 'echo "Installing node@${NODE_VER}, this may take several minutes..."' >> $HOME/.profile
-RUN echo 'nvm install ${NODE_VER}' >> $HOME/.profile
-RUN echo 'nvm alias default ${NODE_VER}' >> $HOME/.profile
-RUN echo 'echo "Install node@${NODE_VER} finished."' >> $HOME/.profile
-ENTRYPOINT ["/bin/bash", "--login", "-i", "-c"]
-CMD ["bash"]
+
+# entrypoint for our CI
+ENTRYPOINT ["/bin/bash", "--login", "-c", "bash $HOME/ci/run-ci.sh $ORG $REPO $COMMIT"]
